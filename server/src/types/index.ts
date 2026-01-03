@@ -2,40 +2,36 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-interface User {
+// Simplified types for immediate functionality
+interface BaseUser {
   id: string;
   username: string;
-  email: string;
-  role: 'ADMIN' | 'OPERATOR' | 'USER' | 'GUEST';
-  firstName: string;
-  lastName: string;
+  email?: string;
+  role?: 'ADMIN' | 'OPERATOR' | 'USER' | 'GUEST';
+  firstName?: string;
+  lastName?: string;
   isActive: boolean;
-  lastLogin?: Date;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
-interface Group {
+interface BaseGroup {
   id: string;
   name: string;
   description?: string;
-  members: string[];
-  createdBy: string;
-  createdAt: Date;
+  members?: string[];
+  createdBy?: string;
   isActive: boolean;
 }
 
-interface PTTSession {
+interface BasePTTSession {
   id: string;
   groupId: string;
-  participants: string[];
+  participants?: string[];
   isActive: boolean;
-  startTime: Date;
+  startTime?: Date;
   endTime?: Date;
-  audioQuality: 'LOW' | 'MEDIUM' | 'HIGH';
 }
 
-interface Location {
+interface BaseLocation {
   id: string;
   userId: string;
   latitude: number;
@@ -45,7 +41,7 @@ interface Location {
   address?: string;
 }
 
-interface Message {
+interface BaseMessage {
   id: string;
   fromUserId: string;
   toUserId?: string;
@@ -54,29 +50,29 @@ interface Message {
   type: 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO';
   timestamp: Date;
   isRead: boolean;
-  metadata?: {
-    fileName?: string;
-    fileSize?: number;
-    duration?: number;
-  };
 }
 
-interface EmergencyAlert {
+interface BaseEmergency {
   id: string;
   userId: string;
   type: 'SOS' | 'MAN_DOWN' | 'GEOFENCE' | 'PRIORITY';
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   title: string;
   message: string;
-  location: {
+  location?: {
     latitude: number;
     longitude: number;
     address?: string;
   };
   timestamp: Date;
   isActive: boolean;
-  acknowledgedBy?: string;
-  acknowledgedAt?: Date;
 }
 
-export type { User, Group, PTTSession, Location, Message, EmergencyAlert };
+export type { 
+  User: BaseUser, 
+  Group: BaseGroup, 
+  PTTSession: BasePTTSession, 
+  Location: BaseLocation, 
+  Message: BaseMessage, 
+  Emergency: BaseEmergency 
+};

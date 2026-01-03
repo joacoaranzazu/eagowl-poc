@@ -3,7 +3,6 @@ import { createServer } from 'http';
 import dotenv from 'dotenv';
 import { config } from '../shared/config';
 import { redisCache } from '../database/redis';
-import { prisma } from '../database/connection';
 import { User } from '../types';
 
 dotenv.config();

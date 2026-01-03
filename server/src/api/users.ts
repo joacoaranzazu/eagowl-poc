@@ -1,13 +1,13 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { User, Group, PTTSession, Location, Message, EmergencyAlert } from '../types';
+import { User, Group, PTTSession, Location, Message, Emergency } from '../types';
 
-// Mock database storage (reemplazar con implementación real)
+// Mock database storage (to be replaced with real implementation)
 let users: User[] = [];
 let groups: Group[] = [];
 let sessions: PTTSession[] = [];
 let locations: Location[] = [];
 let messages: Message[] = [];
-let emergencies: EmergencyAlert[] = [];
+let emergencies: Emergency[] = [];
 
 export async function getUsers(reply: FastifyReply) {
   return reply.send({ 
@@ -55,10 +55,11 @@ export async function updateUser(id: string, updates: Partial<User>, reply: Fast
     });
   }
   
-  users[userIndex] = { ...users[userIndex], ...updates, updatedAt: new Date() };
+  const updatedUser = { ...users[userIndex], ...updates, updatedAt: new Date() };
+  users[userIndex] = updatedUser;
   return reply.send({ 
     success: true, 
-    data: users[userIndex] 
+    data: updatedUser 
   });
 }
 
