@@ -58,9 +58,20 @@ function Build-Server {
         return $false
     }
     
+    # Generate package-lock.json if missing
+    if (-not (Test-Path "package-lock.json")) {
+        Write-Status "Generating package-lock.json..." "Yellow"
+        npm install --package-lock-only
+    }
+    
     # Install dependencies
     Write-Status "Installing server dependencies..."
-    npm ci --production
+    if (Test-Path "package-lock.json") {
+        npm ci --production
+    } else {
+        Write-Status "package-lock.json not found, using npm install instead..." "Yellow"
+        npm install --production
+    }
     
     # Build TypeScript
     Write-Status "Building TypeScript..."
@@ -92,6 +103,18 @@ function Build-Mobile-Apps {
     
     Set-Location "$BaseDir\mobile"
     
+    # Check if Node.js is available
+    if (-not (Test-Command "npm")) {
+        Write-Status "ERROR: npm not found. Please install Node.js." "Red"
+        return $false
+    }
+    
+    # Generate package-lock.json if missing
+    if (-not (Test-Path "package-lock.json")) {
+        Write-Status "Generating package-lock.json..." "Yellow"
+        npm install --package-lock-only
+    }
+    
     # Check if Expo CLI is available
     if (-not (Test-Command "expo")) {
         Write-Status "WARNING: expo CLI not found. Skipping mobile build." "Yellow"
@@ -101,7 +124,12 @@ function Build-Mobile-Apps {
     
     # Install dependencies
     Write-Status "Installing mobile dependencies..."
-    npm ci
+    if (Test-Path "package-lock.json") {
+        npm ci
+    } else {
+        Write-Status "package-lock.json not found, using npm install instead..." "Yellow"
+        npm install
+    }
     
     # Build APKs (placeholder - would require Expo account)
     Write-Status "Mobile apps require Expo EAS build service." "Yellow"
@@ -129,9 +157,31 @@ function Build-Desktop-Console {
     
     Set-Location "$BaseDir\dispatch-console"
     
+    # Check if Node.js is available
+    if (-not (Test-Command "npm")) {
+        Write-Status "ERROR: npm not found. Please install Node.js." "Red"
+        return $false
+    }
+    
+    # Generate package-lock.json if missing
+    if (-not (Test-Path "package-lock.json")) {
+        Write-Status "Generating package-lock.json..." "Yellow"
+        npm install --package-lock-only
+    }
+    
     # Install dependencies
     Write-Status "Installing desktop dependencies..."
-    npm ci
+    if (Test-Path "package-lock.json") {
+        npm ci
+    } else {
+        npm install
+    }
+    
+    # Check if Electron Builder is available
+    if (-not (Test-Command "electron-builder")) {
+        Write-Status "Installing electron-builder..."
+        npm install electron-builder --save-dev
+    }
     
     # Check if Electron Builder is available
     if (-not (Test-Command "electron-builder")) {
