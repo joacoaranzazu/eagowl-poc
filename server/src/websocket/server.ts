@@ -1,259 +1,180 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
-import { config } from '@/shared/config';
-import { redisCache } from '@/database/redis';
-import { prisma } from '@/database/connection';
-import { authenticateSocket } from '@/auth/socket-auth';
-import { PTTService } from './services/ptt-service';
-import { LocationService } from './services/location-service';
-import { MessageService } from './services/message-service';
-import { EmergencyService } from './services/emergency-service';
+import dotenv from 'dotenv';
+import { config } from '../shared/config';
+import { redisCache } from '../database/redis';
+import { prisma } from '../database/connection';
+import { User } from '../types';
 
-export interface AuthenticatedSocket extends Socket {
+dotenv.config();
+
+interface AuthenticatedSocket extends Socket {
   userId: string;
-  user: any;
-  deviceId: string;
+  username: string;
+  user: User;
 }
 
-export class WebSocketServer {
-  private io: SocketIOServer;
-  private server: any;
-  private pttService: PTTService;
-  private locationService: LocationService;
-  private messageService: MessageService;
-  private emergencyService: EmergencyService;
-
-  constructor() {
-    this.server = createServer();
-    this.io = new SocketIOServer(this.server, {
-      cors: {
-        origin: config.CORS_ORIGIN,
-        methods: ['GET', 'POST'],
-        credentials: true
-      },
-      transports: ['websocket', 'polling']
-    });
-
-    this.pttService = new PTTService(this.io);
-    this.locationService = new LocationService(this.io);
-    this.messageService = new MessageService(this.io);
-    this.emergencyService = new EmergencyService(this.io);
+const server = createServer();
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: config.cors.origin,
+    methods: ["GET", "POST"]
   }
+});
 
-  async start(): Promise<void> {
-    // Authentication middleware
-    this.io.use(authenticateSocket);
+// Mock authenticated users storage
+const authenticatedUsers = new Map<string, AuthenticatedSocket>();
 
-    // Connection handling
-    this.io.on('connection', (socket: AuthenticatedSocket) => {
-      this.handleConnection(socket);
-    });
+io.on('connection', (socket: AuthenticatedSocket) => {
+  console.log(`🔗 User connected: ${socket.id}`);
 
-    // Start server
-    this.server.listen(config.WS_PORT, config.WS_HOST);
-    console.log(`📡 WebSocket server listening on ${config.WS_HOST}:${config.WS_PORT}`);
-  }
-
-  private handleConnection(socket: AuthenticatedSocket): void {
-    console.log(`🔌 User ${socket.userId} connected with device ${socket.deviceId}`);
-
-    // Join user to their personal room
-    socket.join(`user:${socket.userId}`);
-
-    // Join user to their groups
-    this.joinUserGroups(socket);
-
-    // Set up event handlers
-    this.setupEventHandlers(socket);
-
-    // Handle disconnection
-    socket.on('disconnect', () => {
-      this.handleDisconnection(socket);
-    });
-
-    // Notify others of user online status
-    socket.broadcast.emit('user_status', {
-      userId: socket.userId,
-      status: 'online',
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  private async joinUserGroups(socket: AuthenticatedSocket): Promise<void> {
+  // Authentication event
+  socket.on('authenticate', async (data) => {
     try {
-      const userGroups = await prisma.userGroup.findMany({
-        where: { userId: socket.userId },
-        include: { group: true }
-      });
-
-      for (const userGroup of userGroups) {
-        const roomName = `group:${userGroup.group.id}`;
-        socket.join(roomName);
-
-        // Notify group members
-        socket.to(roomName).emit('group_member_online', {
-          groupId: userGroup.group.id,
-          userId: socket.userId,
-          username: socket.user.username,
-          timestamp: new Date().toISOString()
-        });
+      const { token } = data as { token: string };
+      
+      // Mock authentication (reemplazar con JWT real)
+      if (token && token.startsWith('mock-jwt-token')) {
+        const user: User = {
+          id: '1',
+          username: 'demo-user',
+          email: 'demo@eagowl-poc.com',
+          role: 'USER',
+          firstName: 'Demo',
+          lastName: 'User',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        // Cache user in Redis
+        await redisCache.set(`user:${user.id}`, JSON.stringify(user), 3600);
+        
+        socket.userId = user.id;
+        socket.username = user.username;
+        socket.user = user;
+        authenticatedUsers.set(socket.id, socket);
+        
+        socket.emit('authenticated', { user });
+        io.emit('users-list', Array.from(authenticatedUsers.values()).map(s => s.user));
+        
+        console.log(`✅ User authenticated: ${user.username}`);
+      } else {
+        socket.emit('authentication-error', { error: 'Invalid token' });
       }
     } catch (error) {
-      console.error('Error joining user groups:', error);
+      console.error('❌ Authentication error:', error);
+      socket.emit('authentication-error', { error: 'Authentication failed' });
     }
-  }
+  });
 
-  private setupEventHandlers(socket: AuthenticatedSocket): void {
-    // PTT Events
-    socket.on('ptt_request', (data) => this.pttService.handleRequest(socket, data));
-    socket.on('ptt_release', (data) => this.pttService.handleRelease(socket, data));
-    socket.on('ptt_audio_data', (data) => this.pttService.handleAudioData(socket, data));
-
-    // Location Events
-    socket.on('location_update', (data) => this.locationService.handleUpdate(socket, data));
-    socket.on('location_request', (data) => this.locationService.handleRequest(socket, data));
-
-    // Messaging Events
-    socket.on('message_send', (data) => this.messageService.handleSend(socket, data));
-    socket.on('message_typing', (data) => this.messageService.handleTyping(socket, data));
-
-    // Emergency Events
-    socket.on('emergency_sos', (data) => this.emergencyService.handleSOS(socket, data));
-    socket.on('emergency_cancel', (data) => this.emergencyService.handleCancel(socket, data));
-
-    // Status Events
-    socket.on('status_update', (data) => this.handleStatusUpdate(socket, data));
-    socket.on('heartbeat', () => this.handleHeartbeat(socket));
-
-    // Configuration Events
-    socket.on('config_request', () => this.handleConfigRequest(socket));
-    socket.on('config_update', (data) => this.handleConfigUpdate(socket, data));
-  }
-
-  private async handleDisconnection(socket: AuthenticatedSocket): Promise<void> {
-    console.log(`🔌 User ${socket.userId} disconnected`);
-
-    try {
-      // Update user status in database
-      await prisma.user.update({
-        where: { id: socket.userId },
-        data: { status: 'OFFLINE' }
+  // PTT events
+  socket.on('ptt-press', (data) => {
+    const user = socket.user;
+    if (user) {
+      socket.broadcast.emit('ptt-active', {
+        userId: user.id,
+        username: user.username,
+        timestamp: new Date()
       });
-
-      // Clear from Redis
-      await redisCache.removeUserSession(socket.userId);
-
-      // Notify others
-      socket.broadcast.emit('user_status', {
-        userId: socket.userId,
-        status: 'offline',
-        timestamp: new Date().toISOString()
-      });
-
-      // Handle active PTT sessions
-      await this.pttService.handleUserDisconnection(socket);
-
-      // Handle emergency alerts
-      await this.emergencyService.handleUserDisconnection(socket);
-
-    } catch (error) {
-      console.error('Error handling disconnection:', error);
+      console.log(`🎤 PTT pressed by: ${user.username}`);
     }
-  }
+  });
 
-  private async handleStatusUpdate(socket: AuthenticatedSocket, data: any): Promise<void> {
-    try {
-      const { status } = data;
-
-      // Update database
-      await prisma.user.update({
-        where: { id: socket.userId },
-        data: { status, updatedAt: new Date() }
+  socket.on('ptt-release', (data) => {
+    const user = socket.user;
+    if (user) {
+      socket.broadcast.emit('ptt-inactive', {
+        userId: user.id,
+        username: user.username,
+        timestamp: new Date()
       });
-
-      // Broadcast to all connections
-      this.io.emit('user_status', {
-        userId: socket.userId,
-        status,
-        timestamp: new Date().toISOString()
-      });
-
-    } catch (error) {
-      socket.emit('error', { message: 'Failed to update status' });
+      console.log(`🎤 PTT released by: ${user.username}`);
     }
-  }
+  });
 
-  private handleHeartbeat(socket: AuthenticatedSocket): void {
-    // Update last seen timestamp
-    socket.emit('heartbeat_ack', {
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  private async handleConfigRequest(socket: AuthenticatedSocket): Promise<void> {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: socket.userId },
-        include: {
-          emergencyProfile: true,
-          userGroups: {
-            include: { group: true }
-          }
-        }
-      });
-
-      socket.emit('config_response', {
-        user,
-        groups: user?.userGroups.map(ug => ug.group),
-        emergencyProfile: user?.emergencyProfile
-      });
-
-    } catch (error) {
-      socket.emit('error', { message: 'Failed to load configuration' });
+  // Location events
+  socket.on('location-update', async (data) => {
+    const user = socket.user;
+    if (user) {
+      const locationData = {
+        userId: user.id,
+        username: user.username,
+        ...data,
+        timestamp: new Date()
+      };
+      
+      // Cache location in Redis
+      await redisCache.set(`location:${user.id}`, JSON.stringify(locationData), 1800);
+      
+      socket.broadcast.emit('location-broadcast', locationData);
+      console.log(`📍 Location updated by: ${user.username}`, data);
     }
-  }
+  });
 
-  private async handleConfigUpdate(socket: AuthenticatedSocket, data: any): Promise<void> {
-    try {
-      const { emergencyProfileId, notifications } = data;
-
-      // Update user preferences
-      await prisma.user.update({
-        where: { id: socket.userId },
-        data: {
-          emergencyProfileId,
-          updatedAt: new Date()
-        }
-      });
-
-      socket.emit('config_updated', {
-        emergencyProfileId,
-        timestamp: new Date().toISOString()
-      });
-
-    } catch (error) {
-      socket.emit('error', { message: 'Failed to update configuration' });
+  // Message events
+  socket.on('send-message', async (data) => {
+    const user = socket.user;
+    if (user) {
+      const messageData = {
+        id: Math.random().toString(36).substr(2, 9),
+        fromUserId: user.id,
+        fromUsername: user.username,
+        ...data,
+        timestamp: new Date(),
+        isRead: false
+      };
+      
+      // Cache message in Redis
+      await redisCache.set(`message:${messageData.id}`, JSON.stringify(messageData), 86400);
+      
+      socket.broadcast.emit('new-message', messageData);
+      console.log(`💬 Message sent by: ${user.username}`);
     }
-  }
+  });
 
-  public getIO(): SocketIOServer {
-    return this.io;
-  }
+  // Emergency events
+  socket.on('emergency-alert', async (data) => {
+    const user = socket.user;
+    if (user) {
+      const alertData = {
+        id: Math.random().toString(36).substr(2, 9),
+        userId: user.id,
+        username: user.username,
+        ...data,
+        timestamp: new Date(),
+        isActive: true
+      };
+      
+      // Cache emergency in Redis
+      await redisCache.set(`emergency:${alertData.id}`, JSON.stringify(alertData), 7200);
+      
+      socket.broadcast.emit('emergency-broadcast', alertData);
+      console.log(`🚨 Emergency alert from: ${user.username}`, alertData);
+    }
+  });
 
-  public broadcastToGroup(groupId: string, event: string, data: any): void {
-    this.io.to(`group:${groupId}`).emit(event, data);
-  }
-
-  public sendToUser(userId: string, event: string, data: any): void {
-    this.io.to(`user:${userId}`).emit(event, data);
-  }
-
-  public async stop(): Promise<void> {
-    return new Promise((resolve) => {
-      this.server.close(() => {
-        this.io.close();
-        resolve();
+  // Handle disconnection
+  socket.on('disconnect', async (reason) => {
+    const user = socket.user;
+    if (user) {
+      authenticatedUsers.delete(socket.id);
+      
+      socket.broadcast.emit('user-disconnected', {
+        userId: user.id,
+        username: user.username,
+        timestamp: new Date()
       });
-    });
-  }
-}
+      
+      console.log(`🔌 User disconnected: ${user.username} - Reason: ${reason}`);
+    }
+  });
+});
+
+const PORT = config.websocket.port;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 EAGOWL-POC WebSocket Server running on port ${PORT}`);
+  console.log(`🔗 WebSocket endpoint: ws://localhost:${PORT}`);
+});
+
+export default io;
