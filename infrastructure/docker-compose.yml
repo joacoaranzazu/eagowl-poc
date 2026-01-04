@@ -90,10 +90,6 @@ services:
       - media_storage:/app/storage/media
       - recordings:/app/storage/recordings
       - logs:/app/logs
-    ports:
-      - "${API_PORT:-8080}:8080"
-      - "${WS_PORT:-9998}:9998"
-      - "${METRICS_PORT:-9090}:${METRICS_PORT:-9090}"
     networks:
       - eagowl-network
     depends_on:
