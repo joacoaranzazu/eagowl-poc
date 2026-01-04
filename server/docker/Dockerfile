@@ -1,53 +1,45 @@
 # Production-ready Dockerfile for eagowl-poc-server
-# Updated: 2026-01-04 to fix npm prune compatibility issues
+# Simplified to avoid dependency conflicts
 
-########## 1) deps (install all deps incl. dev for build) ##########
-FROM node:18-alpine AS deps
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci --legacy-peer-deps
-
-########## 2) build (compile TypeScript) ##########
+########## 1) Build stage ##########
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# toolchain por si alguna dependencia intenta compilar binarios (seguro y barato)
-RUN apk add --no-cache python3 make g++
+# Install only essential build dependencies
+COPY package*.json ./
+RUN npm ci --only=production --legacy-peer-deps && \
+    npm cache clean --force
 
-COPY --from=deps /app/node_modules ./node_modules
+# Copy source and build
 COPY . .
-
 RUN npm run build
 
-########## 3) production runtime (only prod deps) ##########
+########## 2) Production runtime ##########
 FROM node:18-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Install curl for HEALTHCHECK (and CA certs)
+# Install curl for healthcheck
 RUN apk add --no-cache curl ca-certificates
 
-# Install production dependencies only
-# This avoids @prisma/client postinstall issues in prod-only installs.
+# Copy package files and install only production dependencies
 COPY package*.json ./
-RUN npm ci --production --legacy-peer-deps && npm cache clean --force
+RUN npm ci --only=production --legacy-peer-deps && \
+    npm cache clean --force
 
-# Copy built output
+# Copy built application
 COPY --from=build /app/dist ./dist
 
-# Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 -G nodejs nodejs
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
 USER nodejs
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -fsS http://localhost:8080/health || exit 1
+  CMD curl -f http://localhost:8080/health || exit 1
 
-# Expose ports
-EXPOSE 8080 9090 9998
+EXPOSE 8080 9998
 
-# Start application
 CMD ["node", "dist/main.js"]
