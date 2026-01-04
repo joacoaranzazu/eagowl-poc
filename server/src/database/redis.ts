@@ -1,6 +1,6 @@
 // Enhanced Redis client with proper error handling and caching
 import Redis from 'ioredis';
-import { config } from './config';
+import { config } from '../shared/config';
 
 declare global {
   var __redis: Redis | undefined;
