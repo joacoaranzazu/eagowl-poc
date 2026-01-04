@@ -56,11 +56,11 @@ services:
       NODE_ENV: production
       PORT: 8080
       HOST: 0.0.0.0
-      DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:-change_this_password}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:mateo633}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret}
+      JWT_SECRET: ${JWT_SECRET:mateo633}
       WS_PORT: 9998
       WS_HOST: 0.0.0.0
       MEDIA_STORAGE_PATH: /app/storage/media
@@ -102,7 +102,7 @@ services:
     container_name: eagowl-poc-coturn
     environment:
       TURN_USERNAME: ${TURN_USERNAME:-eagowl_user}
-      TURN_PASSWORD: ${TURN_PASSWORD:-eagowl_password}
+      TURN_PASSWORD: ${TURN_PASSWORD:mateo633}
     volumes:
       - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
       - ./coturn/cert.pem:/etc/ssl/cert.pem
