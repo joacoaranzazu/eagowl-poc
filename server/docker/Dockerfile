@@ -1,28 +1,3 @@
-<<<<<<< HEAD
-# Optimized production Dockerfile (fixed)
-# - Removes invalid "..."
-# - Correct layer caching
-# - Multi-stage: build with dev deps, run with prod deps only
-# - Installs curl for healthcheck
-# - Runs as non-root
-
-########## 1) Dependencies (prod + dev) ##########
-FROM node:18-alpine AS deps
-WORKDIR /app
-
-# Copy manifests first for better caching
-COPY package*.json ./
-
-# Install all deps (needed to build)
-RUN npm ci --legacy-peer-deps
-
-
-########## 2) Build ##########
-FROM node:18-alpine AS build
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
 
 # Build application (expects dist/)
 RUN npm run build
