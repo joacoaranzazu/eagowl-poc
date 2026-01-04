@@ -27,11 +27,10 @@ ENV NODE_ENV=production
 # Install curl for HEALTHCHECK (and CA certs)
 RUN apk add --no-cache curl ca-certificates
 
-# Copy manifests and node_modules from deps, then prune dev deps.
+# Install production dependencies only
 # This avoids @prisma/client postinstall issues in prod-only installs.
 COPY package*.json ./
-COPY --from=deps /app/node_modules ./node_modules
-RUN npm prune --production && npm cache clean --force
+RUN npm ci --production --legacy-peer-deps && npm cache clean --force
 
 # Copy built output
 COPY --from=build /app/dist ./dist
