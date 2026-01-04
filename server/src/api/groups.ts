@@ -1,4 +1,5 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { Group } from '../types';
 
 export async function getGroups(request: FastifyRequest, reply: FastifyReply) {
   return reply.send({
@@ -57,4 +58,10 @@ export async function updateGroup(request: FastifyRequest, reply: FastifyReply) 
       updatedAt: new Date()
     }
   });
+}
+
+export async function groupRoutes(server: FastifyInstance) {
+  server.get('/', getGroups);
+  server.post('/', createGroup);
+  server.put('/:id', updateGroup);
 }

@@ -1,16 +1,27 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
 
-// Define interfaces para uso en toda la aplicación
+// Tipos comunes (mantenerlos flexibles: parte del código es mock)
+
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  DISPATCHER = 'DISPATCHER',
+  USER = 'USER',
+}
+
 export interface User {
   id: string;
-  email: string;
   username: string;
-  fullName: string;
-  isOnline: boolean;
-  isActive: boolean;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  fullName?: string;
   role: UserRole;
+  isActive: boolean;
+  isOnline?: boolean;
+  status?: string;
   emergencyProfileId?: string;
+  avatar?: string;
+  lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +30,8 @@ export interface Group {
   id: string;
   name: string;
   description?: string;
+  members?: string[];
+  type?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -29,20 +42,33 @@ export interface Location {
   userId: string;
   latitude: number;
   longitude: number;
-  accuracy: number;
+  accuracy?: number;
   altitude?: number;
   speed?: number;
   heading?: number;
+  locationSource?: string;
+  address?: string;
   timestamp: Date;
 }
 
 export interface Message {
   id: string;
-  senderId: string;
+
+  // Mock API fields
+  fromUserId?: string;
+  toUserId?: string;
+
+  // Prisma/API-ish fields
+  senderId?: string;
   recipientId?: string;
+
   groupId?: string;
   content: string;
-  type: 'text' | 'image' | 'file';
+
+  // Some modules use `type`, others `messageType`
+  type?: string;
+  messageType?: string;
+
   mediaUrl?: string;
   isRead: boolean;
   timestamp: Date;
@@ -50,136 +76,49 @@ export interface Message {
 
 export interface PTTSession {
   id: string;
-  userId: string;
+  userId?: string;
   groupId?: string;
+  participants?: string[];
   isActive: boolean;
   startTime: Date;
   endTime?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  audioQuality?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface EmergencyAlert {
   id: string;
   userId: string;
-  type: 'man_down' | 'sos' | 'medical' | 'fire' | 'police';
-  message: string;
-  isActive: boolean;
+  type: string;
+  severity?: string;
+  title?: string;
+  message?: string;
+  notes?: string;
+  location?: any;
   locationId?: string;
+  priority?: number;
+  isActive: boolean;
   timestamp: Date;
 }
 
-// Roles de usuario
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  DISPATCHER = 'DISPATCHER',
-  USER = 'USER'
-}
+export type Emergency = EmergencyAlert;
 
-// Clases de rutas para main.ts
-export class AuthRoutes {
-  constructor() {
-    // Placeholder implementation
-  }
-  
-  // Método para registrar rutas
-  registerRoutes(server: any) {
-    // Implementación vacía para evitar errores de compilación
-  }
-}
-
-export class UserRoutes {
-  constructor() {
-    // Placeholder implementation
-  }
-  
-  registerRoutes(server: any) {
-    // Implementación vacía para evitar errores de compilación
-  }
-}
-
-export class GroupRoutes {
-  constructor() {
-    // Placeholder implementation
-  }
-  
-  registerRoutes(server: any) {
-    // Implementación vacía para evitar errores de compilación
-  }
-}
-
-export class PTTRoutes {
-  constructor() {
-    // Placeholder implementation
-  }
-  
-  registerRoutes(server: any) {
-    // Implementación vacía para evitar errores de compilación
-  }
-}
-
-export class LocationRoutes {
-  constructor() {
-    // Placeholder implementation
-  }
-  
-  registerRoutes(server: any) {
-    // Implementación vacía para evitar errores de compilación
-  }
-}
-
-export class MessageRoutes {
-  constructor() {
-    // Placeholder implementation
-  }
-  
-  registerRoutes(server: any) {
-    // Implementación vacía para evitar errores de compilación
-  }
-}
-
-export class EmergencyRoutes {
-  constructor() {
-    // Placeholder implementation
-  }
-  
-  registerRoutes(server: any) {
-    // Implementación vacía para evitar errores de compilación
-  }
-}
-
-export class MediaRoutes {
-  constructor() {
-    // Placeholder implementation
-  }
-  
-  registerRoutes(server: any) {
-    // Implementación vacía para evitar errores de compilación
-  }
-}
-
-// Error handler mejorado
+// Error handler simple (se usa como fallback en algunos módulos)
 export function errorHandler(error: Error, request: FastifyRequest, reply: FastifyReply) {
   request.log.error(error);
-  
-  // Manejo de errores básico para desarrollo
+
   if (process.env.NODE_ENV === 'development') {
     reply.status(500).send({
       error: 'Internal Server Error',
       message: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
-  } else {
-    reply.status(500).send({
-      error: 'Internal Server Error',
-      message: 'Something went wrong'
-    });
+    return;
   }
-}
 
-// Middleware de logging
-export function logRequest(request: FastifyRequest, reply: FastifyReply, done: () => void) {
-  const timestamp = new Date().toISOString();
-  console.log(`${timestamp} ${request.method} ${request.url}`);
-  done();
+  reply.status(500).send({
+    error: 'Internal Server Error',
+    message: 'Something went wrong',
+  });
 }

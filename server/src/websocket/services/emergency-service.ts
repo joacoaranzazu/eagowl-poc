@@ -1,6 +1,6 @@
 import { AuthenticatedSocket } from '../server';
-import { redisCache } from '@/database/redis';
-import { prisma } from '@/database/connection';
+import { redisCache } from '../../database/redis';
+import { prisma } from '../../database/connection';
 
 export class EmergencyService {
   private io: any;
@@ -29,26 +29,27 @@ export class EmergencyService {
       const emergencyAlert = await prisma.emergencyAlert.create({
         data: {
           userId: socket.userId,
-          alertType: alertType.toUpperCase(),
+          alertType: alertType.toUpperCase() as any,
           status: 'ACTIVE',
           priority: this.getPriorityByType(alertType),
           notes,
           createdAt: new Date()
-        }
+        } as any
       });
 
       // Create location record if provided
       if (locationData) {
-        const locationRecord = await prisma.location.create({
-          data: {
-            userId: socket.userId,
-            latitude: locationData.latitude,
-            longitude: locationData.longitude,
-            accuracy: locationData.accuracy ? new String(locationData.accuracy) : null,
-            altitude: locationData.altitude ? new String(locationData.altitude) : null,
-            timestamp: new Date()
-          }
-        });
+          const locationRecord = await prisma.location.create({
+            data: {
+              user: { connect: { id: socket.userId } },
+              latitude: String(locationData.latitude),
+              longitude: String(locationData.longitude),
+              accuracy: locationData.accuracy != null ? String(locationData.accuracy) : null,
+              altitude: locationData.altitude != null ? String(locationData.altitude) : null,
+              locationSource: locationData.locationSource ?? 'gps',
+              timestamp: new Date()
+            } as any
+          });
 
         await prisma.emergencyAlert.update({
           where: { id: emergencyAlert.id },
@@ -327,12 +328,12 @@ export class EmergencyService {
       await prisma.emergencyAlert.create({
         data: {
           userId: socket.userId,
-          alertType: 'COMMUNICATION_LOST',
+          alertType: 'COMMUNICATION_LOST' as any,
           status: 'ACTIVE',
           priority: 3,
           notes: 'User disconnected during emergency situation',
           createdAt: new Date()
-        }
+        } as any
       });
 
       console.log(`⚠️ Communication lost during emergency for user ${socket.userId}`);

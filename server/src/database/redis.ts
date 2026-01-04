@@ -12,7 +12,6 @@ const redis = globalThis.__redis || new Redis({
   password: config.REDIS_PASSWORD || undefined,
   maxRetriesPerRequest: 3,
   lazyConnect: true,
-  retryDelayOnFailover: 100,
   commandTimeout: 5000,
   connectTimeout: 10000,
 });

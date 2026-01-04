@@ -1,4 +1,5 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { EmergencyAlert } from '../types';
 
 export async function getEmergencyAlerts(request: FastifyRequest, reply: FastifyReply) {
   return reply.send({
@@ -37,4 +38,9 @@ export async function createEmergencyAlert(request: FastifyRequest, reply: Fasti
     success: true,
     data: newAlert
   });
+}
+
+export async function emergencyRoutes(server: FastifyInstance) {
+  server.get('/', getEmergencyAlerts);
+  server.post('/', createEmergencyAlert);
 }

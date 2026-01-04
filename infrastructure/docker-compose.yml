@@ -7,8 +7,8 @@ services:
     container_name: eagowl-poc-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-eagowl_poc_db}
-      POSTGRES_USER: eagowl_poc_user
-      POSTGRES_PASSWORD: Mateo633
+      POSTGRES_USER: ${POSTGRES_USER:-eagowl_poc_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -30,7 +30,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: eagowl-poc-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-change_this_redis_password}
     volumes:
       - redis_data:/data
     ports:
@@ -39,7 +39,7 @@ services:
       - eagowl-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -59,7 +59,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:-change_this_password}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-change_this_redis_password}
       JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret}
       WS_PORT: 9998
       WS_HOST: 0.0.0.0
@@ -90,7 +90,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -156,7 +156,7 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
+      - "${PROMETHEUS_PORT:-9091}:9090"
     networks:
       - eagowl-network
     restart: unless-stopped

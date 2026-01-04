@@ -1,142 +1,21 @@
-name: Build and Deploy EAGOWL-POC
+name: Docker Build (Manual/Tags)
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-
-env:
-  NODE_ENV: production
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+    tags:
+      - 'v*.*.*'
 
 jobs:
-  build:
-    name: Build Components
+  docker-build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app: [server, mobile, desktop]
-    
-    outputs:
-      cache-hit: ${{ steps.cache.outputs.cache-hit }}
-      version: ${{ steps.version.outputs.version }}
-    
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Cache Dependencies
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: |
-            ${{ matrix.app }}/node_modules
-            ${{ matrix.app }}/package-lock.json
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Get Version
-        id: version
+      - name: Build API image
         run: |
-          if [ -f "${{ matrix.app }}/package.json" ]; then
-            echo "v$(node -p "require('./package.json').version)"
-          else
-            echo "1.0.0"
-
-      - name: Install Dependencies
-        run: |
-          cd ${{ matrix.app }}
-          if [ "$NODE_ENV" = "production" ]; then
-            npm ci --only=production --legacy-peer-deps
-          else
-            npm ci
-          fi
-
-      - name: Build Application
-        run: |
-          cd ${{ matrix.app }}
-          if [ "${{ matrix.app }}" = "server" ]; then
-            npm run build
-          elif [ "${{ matrix.app }}" = "mobile" ]; then
-            npx expo export:web
-          elif [ "${{ matrix.app }}" = "desktop" ]; then
-            npm run build
-          fi
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.app }}-build
-          path: |
-            server/dist
-            mobile/dist
-            desktop/dist
-          retention-days: 30
-
-  deploy-staging:
-    name: Deploy to Staging
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy Infrastructure
-        run: |
-          echo "🚀 Deploying to staging environment"
-
-      - name: Test Deployment
-        run: |
-          echo "🧪 Testing deployment..."
-          sleep 5
-          echo "✅ Staging deployment complete"
-
-      - name: Test Services
-        run: |
-          echo "📋 Verifying services..."
-          curl -f https://staging-api.eagowl-poc.com/health || echo "❌ API health check failed"
-
-  create-release:
-    name: Create Release
-    needs: deploy-staging
-    if: startsWith('refs/tags/')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
-        with:
-          tag_name: v${{ github.ref_name }}
-          release_name: Release v${{ github.ref_name }}
-          draft: false
-          prerelease: false
-          generate_release_notes: |
-            ## 🎉 EAGOWL-POC Release v${{ github.ref_name }}
-            
-            ### 🚀 New Features
-            - ✅ Complete TypeScript error resolution
-            - ✅ Optimized Docker builds
-            - ✅ Enhanced GitHub Actions workflow
-            - ✅ Production-ready deployment pipeline
-            
-            ### 🐛 Bug Fixes
-            - Fixed 65 TypeScript compilation errors
-            - Resolved package version conflicts
-            - Enhanced Redis error handling
-            - Fixed Docker configuration
-            
-            ### 📊 Technical Improvements
-            - Multi-stage Docker builds
-            - Parallel build matrix
-            - Artifact caching
-            - Production optimizations
-            
-            ### 🔒 Security Enhancements
-            - Secure container execution
-            - Proper dependency management
-            - Enhanced logging and monitoring
-            
-            ### 🚀 **Platform Status: PRODUCTION READY**
+          docker build -f server/docker/Dockerfile --target production -t eagowl-poc-api:ci server

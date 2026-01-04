@@ -1,6 +1,6 @@
 import { AuthenticatedSocket } from '../server';
-import { redisCache } from '@/database/redis';
-import { prisma } from '@/database/connection';
+import { redisCache } from '../../database/redis';
+import { prisma } from '../../database/connection';
 
 export class PTTService {
   private io: any;
@@ -41,10 +41,10 @@ export class PTTService {
           groupId,
           callerId: socket.userId,
           startTime: new Date(),
-          sessionType: sessionType.toUpperCase(),
+          sessionType: sessionType.toUpperCase() as any,
           isActive: true,
           participants: 1
-        }
+        } as any
       });
 
       // Cache active session

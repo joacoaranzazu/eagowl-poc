@@ -1,34 +1,61 @@
-# Optimized production Dockerfile
-FROM node:18-alpine AS base
+# Optimized production Dockerfile (fixed)
+# - Removes invalid "..."
+# - Correct layer caching
+# - Multi-stage: build with dev deps, run with prod deps only
+# - Installs curl for healthcheck
+# - Runs as non-root
+
+########## 1) Dependencies (prod + dev) ##########
+FROM node:18-alpine AS deps
+WORKDIR /app
+
+# Copy manifests first for better caching
+COPY package*.json ./
+
+# Install all deps (needed to build)
+RUN npm ci --legacy-peer-deps
+
+
+########## 2) Build ##########
+FROM node:18-alpine AS build
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Build application (expects dist/)
+RUN npm run build
+
+
+########## 3) Production runtime ##########
+FROM node:18-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Install production dependencies with cache
-RUN npm install --production --legacy-peer-deps
+# Install curl for HEALTHCHECK (and CA certs)
+RUN apk add --no-cache curl ca-certificates
 
-# Copy package files first (better layer caching)
+# Copy manifests and node_modules from deps, then prune dev deps.
+# This avoids @prisma/client postinstall issues in prod-only installs.
 COPY package*.json ./
-RUN npm ci --production --legacy-peer-deps
+COPY --from=deps /app/node_modules ./node_modules
+RUN npm prune --omit=dev && npm cache clean --force
 
-# Copy source code
-COPY . .
-
-# Build application
-RUN npm run build
+# Copy built output
+COPY --from=build /app/dist ./dist
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs \
-    && adduser --system --uid 1001 -G nodejs nodejs
+  && adduser --system --uid 1001 -G nodejs nodejs
 
-# Switch to non-root user
 USER nodejs
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -fsS http://localhost:8080/health || exit 1
 
 # Expose ports
 EXPOSE 8080 9090 9998
 
-# Start application
-CMD ["node", "dist/main-simple.js"]
+# Start application (full server)
+CMD ["node", "dist/main.js"]

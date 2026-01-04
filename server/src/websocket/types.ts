@@ -1,4 +1,4 @@
-# TypeScript types for EAGOWL-POC WebSocket
+// TypeScript types for EAGOWL-POC WebSocket
 export interface AuthenticatedSocket {
   id: string;
   userId: string;

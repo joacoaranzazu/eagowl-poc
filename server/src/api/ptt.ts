@@ -1,4 +1,5 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { PTTSession } from '../types';
 
 export async function getPTTSessions(request: FastifyRequest, reply: FastifyReply) {
   return reply.send({
@@ -43,4 +44,10 @@ export async function endSession(request: FastifyRequest, reply: FastifyReply) {
       endTime: new Date()
     }
   });
+}
+
+export async function pttRoutes(server: FastifyInstance) {
+  server.get('/sessions', getPTTSessions);
+  server.post('/sessions', createSession);
+  server.post('/sessions/:id/end', endSession);
 }

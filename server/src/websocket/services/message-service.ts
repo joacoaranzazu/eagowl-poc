@@ -1,6 +1,6 @@
 import { AuthenticatedSocket } from '../server';
-import { redisCache } from '@/database/redis';
-import { prisma } from '@/database/connection';
+import { redisCache } from '../../database/redis';
+import { prisma } from '../../database/connection';
 
 export class MessageService {
   private io: any;
@@ -45,18 +45,18 @@ export class MessageService {
       }
 
       // Create message
-      const message = await prisma.message.create({
+      const message: any = await prisma.message.create({
         data: {
           senderId: socket.userId,
           recipientId,
           groupId,
-          messageType: messageType.toUpperCase(),
+          messageType: messageType.toUpperCase() as any,
           content,
           filePath,
           fileName,
           fileSize: fileSize ? BigInt(fileSize) : null,
           replyToId
-        },
+        } as any,
         include: {
           sender: {
             select: { id: true, username: true, firstName: true, lastName: true }
@@ -64,7 +64,7 @@ export class MessageService {
           recipient: {
             select: { id: true, username: true, firstName: true, lastName: true }
           }
-        }
+        } as any
       });
 
       const messageData = {

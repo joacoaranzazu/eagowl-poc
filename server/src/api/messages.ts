@@ -1,4 +1,5 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { Message } from '../types';
 
 export async function getMessages(request: FastifyRequest, reply: FastifyReply) {
   return reply.send({
@@ -32,11 +33,17 @@ export async function sendMessage(request: FastifyRequest, reply: FastifyReply) 
   const newMessage = {
     id: Math.random().toString(36).substr(2, 9),
     ...messageData,
-    timestamp: new Date()
+    timestamp: new Date(),
+    isRead: false,
   };
   
   return reply.send({
     success: true,
     data: newMessage
   });
+}
+
+export async function messageRoutes(server: FastifyInstance) {
+  server.get('/', getMessages);
+  server.post('/', sendMessage);
 }

@@ -1,4 +1,5 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { Location } from '../types';
 
 export async function getLocation(request: FastifyRequest, reply: FastifyReply) {
   return reply.send({
@@ -27,4 +28,9 @@ export async function updateLocation(request: FastifyRequest, reply: FastifyRepl
       timestamp: new Date()
     }
   });
+}
+
+export async function locationRoutes(server: FastifyInstance) {
+  server.get('/', getLocation);
+  server.put('/:id', updateLocation);
 }

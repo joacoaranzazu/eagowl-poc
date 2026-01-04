@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { config } from '@/shared/config';
+import { config } from '../shared/config';
 
 declare global {
   var __prisma: PrismaClient | undefined;

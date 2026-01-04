@@ -2,9 +2,10 @@
   "name": "eagowl-poc-server",
   "version": "1.0.0",
   "description": "EAGOWL-POC Backend Server",
-  "main": "dist/main-simple.js",
+  "main": "dist/main.js",
   "scripts": {
-    "dev": "node dist/main-simple.js",
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/main.ts",
+    "dev:simple": "node dist/main-simple.js",
     "build": "tsc",
     "start": "node dist/main.js",
     "test": "jest",

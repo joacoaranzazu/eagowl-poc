@@ -1,4 +1,5 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { User, UserRole } from '../types';
 
 export async function login(request: FastifyRequest, reply: FastifyReply) {
   const { username, password } = request.body as { username: string; password: string };
@@ -12,7 +13,7 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
           id: '1',
           username: 'admin',
           email: 'admin@eagowl-poc.com',
-          role: 'ADMIN',
+          role: UserRole.ADMIN,
           firstName: 'Admin',
           lastName: 'User',
           isActive: true,
@@ -38,7 +39,7 @@ export async function register(request: FastifyRequest, reply: FastifyReply) {
   const newUser = {
     id: Math.random().toString(36).substr(2, 9),
     ...userData,
-    role: userData.role || 'USER',
+     role: userData.role || UserRole.USER,
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -56,4 +57,10 @@ export async function logout(request: FastifyRequest, reply: FastifyReply) {
     success: true,
     message: 'Logged out successfully'
   });
+}
+
+export async function authRoutes(server: FastifyInstance) {
+  server.post('/login', login);
+  server.post('/register', register);
+  server.post('/logout', logout);
 }

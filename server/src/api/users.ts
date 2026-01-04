@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { User, Group, PTTSession, Location, Message, Emergency } from '../types';
 
 // Mock database storage (to be replaced with real implementation)
@@ -116,7 +116,7 @@ export async function getLocations(reply: FastifyReply) {
   });
 }
 
-export async function updateLocation(userId: string, locationData: Omit<Location, 'id' | 'timestamp'>, reply: FastifyReply) {
+export async function updateLocation(userId: string, locationData: Omit<Location, 'id' | 'timestamp' | 'userId'>, reply: FastifyReply) {
   const newLocation: Location = {
     id: Math.random().toString(36).substr(2, 9),
     userId,
@@ -160,8 +160,8 @@ export async function getEmergencyAlerts(reply: FastifyReply) {
   });
 }
 
-export async function createEmergencyAlert(alertData: Omit<EmergencyAlert, 'id' | 'timestamp' | 'isActive'>, reply: FastifyReply) {
-  const newAlert: EmergencyAlert = {
+export async function createEmergencyAlert(alertData: Omit<Emergency, 'id' | 'timestamp' | 'isActive'>, reply: FastifyReply) {
+  const newAlert: Emergency = {
     id: Math.random().toString(36).substr(2, 9),
     ...alertData,
     isActive: true,
@@ -172,5 +172,20 @@ export async function createEmergencyAlert(alertData: Omit<EmergencyAlert, 'id' 
   return reply.send({ 
     success: true, 
     data: newAlert 
+  });
+}
+
+export async function userRoutes(server: FastifyInstance) {
+  server.get('/', async (_request, reply) => getUsers(reply));
+  server.get('/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    return getUserById(id, reply);
+  });
+  server.post('/', async (request, reply) => {
+    return createUser(request.body as any, reply);
+  });
+  server.put('/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    return updateUser(id, request.body as any, reply);
   });
 }

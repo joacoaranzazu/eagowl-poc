@@ -20,7 +20,6 @@ async function createServer() {
   const server = fastify({
     logger: {
       level: config.LOG_LEVEL,
-      format: config.LOG_FORMAT
     }
   });
 

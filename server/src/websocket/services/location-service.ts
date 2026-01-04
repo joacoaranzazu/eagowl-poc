@@ -1,6 +1,6 @@
 import { AuthenticatedSocket } from '../server';
-import { redisCache } from '@/database/redis';
-import { prisma } from '@/database/connection';
+import { redisCache } from '../../database/redis';
+import { prisma } from '../../database/connection';
 
 interface LocationData {
   latitude: number;
@@ -33,7 +33,7 @@ export class LocationService {
       } = data;
 
       // Validate coordinates
-      if (!latitude || !longitude) {
+      if (latitude == null || longitude == null) {
         socket.emit('error', { message: 'Invalid coordinates' });
         return;
       }
@@ -41,16 +41,16 @@ export class LocationService {
       // Save to database
       const location = await prisma.location.create({
         data: {
-          userId: socket.userId,
-          latitude,
-          longitude,
-          accuracy: accuracy ? new String(accuracy) : null,
-          altitude: altitude ? new String(altitude) : null,
-          speed: speed ? new String(speed) : null,
-          heading: heading || null,
+          user: { connect: { id: socket.userId } },
+          latitude: latitude.toString(),
+          longitude: longitude.toString(),
+          accuracy: accuracy != null ? accuracy.toString() : null,
+          altitude: altitude != null ? altitude.toString() : null,
+          speed: speed != null ? speed.toString() : null,
+          heading: heading ?? null,
           locationSource,
           timestamp: new Date()
-        }
+        } as any
       });
 
       // Cache latest location
@@ -111,7 +111,7 @@ export class LocationService {
 
       let locations;
 
-      if (userId && Array.isArray(userIds)) {
+      if (userIds && Array.isArray(userIds)) {
         // Get specific users' locations
         locations = await this.getUsersLocations(userIds, timeRange);
       } else if (groupId) {
