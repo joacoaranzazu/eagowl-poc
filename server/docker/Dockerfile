@@ -1,7 +1,7 @@
 # Production-ready Dockerfile for eagowl-poc-server (Hostinger-proof)
 
 ########## 1) Build stage ##########
-FROM node:20-alpine AS build
+FROM node:20-alpine AS production
 WORKDIR /app
 
 # toolchain por si alguna dependencia requiere compilación nativa
