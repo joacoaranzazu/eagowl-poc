@@ -5,10 +5,9 @@
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# Install only essential build dependencies
+# Install all dependencies for building
 COPY package*.json ./
-RUN npm ci --only=production --legacy-peer-deps && \
-    npm cache clean --force
+RUN npm ci --legacy-peer-deps
 
 # Copy source and build
 COPY . .
