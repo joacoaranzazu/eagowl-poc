@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-eagowl_poc_db}
       POSTGRES_USER: eagowl_poc_user
-      POSTGRES_PASSWORD: Mateo633
+      POSTGRES_PASSWORD: mateo633
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
