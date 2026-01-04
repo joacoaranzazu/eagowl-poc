@@ -1,7 +1,9 @@
 # Optimized production Dockerfile
-FROM node:18-alpine AS base
+# Optimized production Dockerfile
+FROM node:18-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
+...
 
 # Install production dependencies with cache
 RUN npm install --production --legacy-peer-deps
