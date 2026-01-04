@@ -102,7 +102,7 @@ services:
     container_name: eagowl-poc-coturn
     environment:
       TURN_USERNAME: ${TURN_USERNAME:-eagowl_user}
-      TURN_PASSWORD: ${TURN_PASSWORD:$31c072c25b89caa71b46f7daafa86e44}
+      TURN_PASSWORD: ${TURN_PASSWORD:${TURN_PASSWORD:-4d79eebd}}
     volumes:
       - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
       - ./coturn/cert.pem:/etc/ssl/cert.pem
