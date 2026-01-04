@@ -238,8 +238,8 @@ volumes:
 
 # Networks
 networks:
-  eagowl-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+ eagowl-network:
+ driver: bridge
+ ipam:
+ config:
+ - subnet: 172.25.0.0/16
