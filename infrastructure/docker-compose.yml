@@ -14,8 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./postgres/init-data.sql:/docker-entrypoint-initdb.d/02-data.sql
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+
     networks:
       - eagowl-network
     restart: unless-stopped
