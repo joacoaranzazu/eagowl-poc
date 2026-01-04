@@ -1,4 +1,5 @@
 # Production-ready Dockerfile for eagowl-poc-server
+# Updated: 2026-01-04 to fix npm prune compatibility issues
 
 ########## 1) deps (install all deps incl. dev for build) ##########
 FROM node:18-alpine AS deps
