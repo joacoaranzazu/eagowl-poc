@@ -4,20 +4,20 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Toolchain por si alguna dependencia requiere compilación nativa
+# Toolchain por si alguna dependencia requiere compilaciï¿½n nativa
 RUN apk add --no-cache python3 make g++
 
 # Instala todas las dependencias (incluye devDependencies para tsc)
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
 
-# Copia el código y construye
+# Copia el cï¿½digo y construye
 COPY . .
 
 # Prisma (si existe), genera el client
-RUN if [ -d "prisma" ]; then npx prisma generate; else echo "no prisma/ directory"; fi
+RUN mkdir -p /app/prisma && if [ -d "prisma" ]; then npx prisma generate; else echo "no prisma/ directory"; fi
 
-# Build con logs útiles si falla
+# Build con logs ï¿½tiles si falla
 RUN npm run build || ( \
   echo "===== BUILD FAILED: context =====" && \
   echo "--- Node/NPM ---" && node -v && npm -v && \
@@ -34,15 +34,15 @@ ENV NODE_ENV=production
 
 RUN apk add --no-cache curl ca-certificates
 
-# Instala SOLO dependencias de producción
+# Instala SOLO dependencias de producciï¿½n
 COPY package*.json ./
 RUN npm ci --omit=dev --legacy-peer-deps && npm cache clean --force
 
 # Copia build output
 COPY --from=build /app/dist ./dist
 
-# Prisma runtime files (si existen)
-COPY --from=build /app/prisma ./prisma 2>/dev/null || true
+# Prisma runtime files
+COPY --from=build /app/prisma ./prisma
 
 # Usuario no-root
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001 -G nodejs
@@ -53,5 +53,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 
 EXPOSE 8080 9998
 
-# Tu app principal según package.json
+# Tu app principal segï¿½n package.json
 CMD ["node", "dist/main-simple.js"]
