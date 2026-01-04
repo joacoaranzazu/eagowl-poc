@@ -2,7 +2,7 @@
 # Simplified to avoid dependency conflicts
 
 ########## 1) Build stage ##########
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 WORKDIR /app
 
 # Install all dependencies for building
@@ -14,7 +14,7 @@ COPY . .
 RUN npm run build
 
 ########## 2) Production runtime ##########
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 
