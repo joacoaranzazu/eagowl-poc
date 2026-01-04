@@ -30,7 +30,10 @@ services:
   redis:
     image: redis:7-alpine
     container_name: eagowl-poc-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-secure_redis_password_change_this_in_production}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-secure_redis_password_change_this_in_production}
+    command: >
+      sh -c 'redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"'
     volumes:
       - redis_data:/data
     ports:
@@ -39,7 +42,7 @@ services:
       - eagowl-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
+      test: ["CMD-SHELL", 'redis-cli -a "$$REDIS_PASSWORD" ping | grep -q PONG']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -56,23 +59,35 @@ services:
       NODE_ENV: production
       PORT: 8080
       HOST: 0.0.0.0
+
+      POSTGRES_DB: ${POSTGRES_DB:-eagowl_poc_db}
+      POSTGRES_USER: ${POSTGRES_USER:-eagowl_poc_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure}
+
       DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:-secure}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
+
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-secure}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-secure_redis_password_change_this_in_production}
+
       JWT_SECRET: ${JWT_SECRET:-qweyuiw6686g}
+
       WS_PORT: 9998
       WS_HOST: 0.0.0.0
+
       MEDIA_STORAGE_PATH: /app/storage/media
       RECORDING_PATH: /app/storage/recordings
+
       STUN_SERVER: ${STUN_SERVER:-stun:stun.l.google.com:19302}
       TURN_SERVER: ${TURN_SERVER:-}
       TURN_USERNAME: ${TURN_USERNAME:-eagowl_turn_user}
       TURN_PASSWORD: ${TURN_PASSWORD:-secure_turn_password_change_this_in_production}
+
       LOG_LEVEL: ${LOG_LEVEL:-info}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
-      METRICS_ENABLED: true
-      METRICS_PORT: 9090
+
+      METRICS_ENABLED: "true"
+      METRICS_PORT: ${METRICS_PORT:-9090}
     volumes:
       - media_storage:/app/storage/media
       - recordings:/app/storage/recordings
@@ -80,7 +95,7 @@ services:
     ports:
       - "${API_PORT:-8080}:8080"
       - "${WS_PORT:-9998}:9998"
-      - "${METRICS_PORT:-9090}:9090"
+      - "${METRICS_PORT:-9090}:${METRICS_PORT:-9090}"
     networks:
       - eagowl-network
     depends_on:
@@ -102,16 +117,14 @@ services:
     container_name: eagowl-poc-coturn
     environment:
       TURN_USERNAME: ${TURN_USERNAME:-eagowl_turn_user}
-      TURN_PASSWORD: ${TURN_PASSWORD:-secure}
+      TURN_PASSWORD: ${TURN_PASSWORD:-secure_turn_password_change_this_in_production}
     volumes:
       - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
       - ./coturn/cert.pem:/etc/ssl/cert.pem
       - ./coturn/key.pem:/etc/ssl/key.pem
     ports:
-      - "3478:3478/udp"           # STUN/TURN UDP
-      - "3478:3478/tcp"           # STUN/TURN TCP
-      # Deshabilitar rango amplio para evitar conflictos de puertos
-      # - "49152-65535:49152-65535/udp"  # RTP/RTCP range - Deshabilitado
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
     networks:
       - eagowl-network
     restart: unless-stopped
@@ -141,22 +154,20 @@ services:
       timeout: 10s
       retries: 3
 
-  # Prometheus Metrics Server
+  # Prometheus Metrics Server (ojo puerto host para no chocar con api-server:9090)
   prometheus:
     image: prom/prometheus:latest
     container_name: eagowl-poc-prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
+      - "${PROMETHEUS_PORT:-9091}:9090"
     networks:
       - eagowl-network
     restart: unless-stopped
@@ -170,7 +181,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-secure}
-      GF_USERS_ALLOW_SIGN_UP: false
+      GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
@@ -217,7 +228,6 @@ services:
     profiles:
       - logging
 
-# Volumes
 volumes:
   postgres_data:
     driver: local
@@ -236,7 +246,6 @@ volumes:
   elasticsearch_data:
     driver: local
 
-# Networks
 networks:
   eagowl-network:
     driver: bridge
