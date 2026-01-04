@@ -1,0 +1,99 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+build/
+*.tgz
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Temporary folders
+tmp/
+temp/
+
+# Database
+*.sqlite
+*.db
+
+# Docker volumes
+postgres_data/
+redis_data/
+media_storage/
+recordings/
+
+# Package files
+package/
+*.zip
+*.exe
+*.AppImage
+*.deb
+*.rpm
+*.dmg
+
+# Passwords and secrets
+passwords.txt
+*.key
+*.pem
+*.crt
+
+# Backup files
+*.backup
+*.bak
+eagowl-poc-backups/
+
+# APK files (built mobile apps)
+*.apk
+
+# Test results
+test-results/
+coverage/
+
+# Prisma generated files
+server/prisma/migrations/
+
+# Infrastructure
+infrastructure/nginx/ssl/
+infrastructure/ssl/
+
+# Generated files to exclude
+build-package.ps1
+_ul
+*.log

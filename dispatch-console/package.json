@@ -1,0 +1,126 @@
+{
+  "name": "eagowl-poc-console",
+  "version": "1.0.0",
+  "description": "EAGOWL-POC Desktop Console",
+  "main": "public/electron.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "electron": "electron .",
+    "electron-dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --publish=never",
+    "dist:linux": "electron-builder --linux --publish=never",
+    "dist:win": "electron-builder --win --publish=never",
+    "dist:mac": "electron-builder --mac --publish=never",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@mui/material": "^5.15.0",
+    "@mui/icons-material": "^5.15.0",
+    "@mui/x-data-grid": "^6.18.2",
+    "@mui/x-date-pickers": "^6.18.2",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.1",
+    "socket.io-client": "^4.7.4",
+    "mapbox-gl": "^2.15.0",
+    "react-map-gl": "^7.1.0",
+    "react-query": "^3.39.3",
+    "axios": "^1.6.2",
+    "recharts": "^2.8.0",
+    "date-fns": "^2.30.0",
+    "uuid": "^9.0.1",
+    "@reduxjs/toolkit": "^2.0.1",
+    "react-redux": "^9.0.4",
+    "react-hook-form": "^7.48.2",
+    "react-virtualized-auto-sizer": "^1.0.20",
+    "resize-observer": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.42",
+    "@types/react-dom": "^18.2.17",
+    "@types/uuid": "^9.0.7",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.8.0",
+    "react-scripts": "5.0.1",
+    "typescript": "^4.9.5",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0",
+    "@types/node": "^20.10.0",
+    "eslint": "^8.55.0",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0"
+  },
+  "build": {
+    "appId": "com.eagowl.poc.console",
+    "productName": "EAGOWL-POC Console",
+    "directories": {
+      "buildResources": "assets"
+    },
+    "files": [
+      "build/**/*",
+      "public/electron.js",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/",
+        "to": "assets/",
+        "filter": ["**/*"]
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
+      "category": "Utility",
+      "icon": "assets/icon.png"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.utilities"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "eagowl-poc",
+      "repo": "eagowl-poc-console"
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
