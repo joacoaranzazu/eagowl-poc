@@ -130,7 +130,7 @@ services:
     image: nginx:alpine
     container_name: eagowl-poc-nginx
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx:/etc/nginx
       - ./nginx/ssl:/etc/nginx/ssl
       - logs:/var/log/nginx
     ports:
