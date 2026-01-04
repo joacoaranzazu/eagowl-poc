@@ -60,7 +60,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      JWT_SECRET: ${JWT_SECRET:${JWT_SECRET:-4d79eebd}}
+      JWT_SECRET: ${JWT_SECRET:"4d79eebd"}
       WS_PORT: 9998
       WS_HOST: 0.0.0.0
       MEDIA_STORAGE_PATH: /app/storage/media
