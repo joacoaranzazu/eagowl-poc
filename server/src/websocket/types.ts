@@ -1,19 +1,17 @@
 // TypeScript types for EAGOWL-POC WebSocket
-export interface AuthenticatedSocket {
-  id: string;
+import type { Socket } from "socket.io";
+
+export interface AuthenticatedSocket extends Socket {
   userId: string;
   username: string;
   user: any;
-  rooms: string[];
 }
 
-// Helper functions
-export function createAuthenticatedSocket(socket: any): AuthenticatedSocket {
-  return {
-    id: socket.id,
-    userId: socket.user?.id || '',
-    username: socket.user?.username || '',
-    user: socket.user || null,
-    rooms: []
-  };
+// Helper function
+export function asAuthenticatedSocket(socket: Socket): AuthenticatedSocket {
+  const s = socket as AuthenticatedSocket;
+  s.userId = (socket as any).user?.id ?? "";
+  s.username = (socket as any).user?.username ?? "";
+  s.user = (socket as any).user ?? null;
+  return s;
 }
