@@ -1,14 +1,14 @@
 # version: '3.8' # Comentado para evitar advertencia
 
 services:
-  # PostgreSQL Database zazu
+  # PostgreSQL Database
   postgres:
     image: postgres:14-alpine
     container_name: eagowl-poc-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-eagowl_poc_db}
       POSTGRES_USER: ${POSTGRES_USER:-eagowl_poc_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_change_this_in_production}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -30,7 +30,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: eagowl-poc-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-change_this_redis_password}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-secure_redis_password_change_this_in_production}
     volumes:
       - redis_data:/data
     ports:
@@ -56,21 +56,21 @@ services:
       NODE_ENV: production
       PORT: 8080
       HOST: 0.0.0.0
-      DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:-change_this_password}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:-secure_password_change_this_in_production}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-change_this_redis_password}
-      JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-secure_redis_password_change_this_in_production}
+      JWT_SECRET: ${JWT_SECRET:-your_super_secure_jwt_secret_change_this_in_production_minimum_64_characters_required_for_security}
       WS_PORT: 9998
       WS_HOST: 0.0.0.0
       MEDIA_STORAGE_PATH: /app/storage/media
       RECORDING_PATH: /app/storage/recordings
       STUN_SERVER: ${STUN_SERVER:-stun:stun.l.google.com:19302}
       TURN_SERVER: ${TURN_SERVER:-}
-      TURN_USERNAME: ${TURN_USERNAME:-}
-      TURN_PASSWORD: ${TURN_PASSWORD:-}
+      TURN_USERNAME: ${TURN_USERNAME:-eagowl_turn_user}
+      TURN_PASSWORD: ${TURN_PASSWORD:-secure_turn_password_change_this_in_production}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
       METRICS_ENABLED: true
       METRICS_PORT: 9090
     volumes:
@@ -101,8 +101,8 @@ services:
     image: coturn/coturn:4.6
     container_name: eagowl-poc-coturn
     environment:
-      TURN_USERNAME: ${TURN_USERNAME:-eagowl_user}
-      TURN_PASSWORD: ${TURN_PASSWORD:-4d79eebd}
+      TURN_USERNAME: ${TURN_USERNAME:-eagowl_turn_user}
+      TURN_PASSWORD: ${TURN_PASSWORD:-secure_turn_password_change_this_in_production}
     volumes:
       - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
       - ./coturn/cert.pem:/etc/ssl/cert.pem
@@ -136,7 +136,7 @@ services:
       - coturn
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -156,7 +156,7 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
-      - "${PROMETHEUS_PORT:-9091}:9090"
+      - "${PROMETHEUS_PORT:-9090}:9090"
     networks:
       - eagowl-network
     restart: unless-stopped
@@ -169,7 +169,7 @@ services:
     container_name: eagowl-poc-grafana
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-secure_grafana_password_change_this_in_production}
       GF_USERS_ALLOW_SIGN_UP: false
     volumes:
       - grafana_data:/var/lib/grafana
