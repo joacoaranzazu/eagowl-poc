@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-eagowl_poc_db}
       POSTGRES_USER: eagowl_poc_user
-      POSTGRES_PASSWORD: mateo633
+      POSTGRES_PASSWORD: Mateo633
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -56,7 +56,7 @@ services:
       NODE_ENV: production
       PORT: 8080
       HOST: 0.0.0.0
-      DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:mateo633}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:Mateo633}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
