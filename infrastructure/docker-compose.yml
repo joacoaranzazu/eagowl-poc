@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-eagowl_poc_db}
       POSTGRES_USER: ${POSTGRES_USER:-eagowl_poc_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_change_this_in_production}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -56,11 +56,11 @@ services:
       NODE_ENV: production
       PORT: 8080
       HOST: 0.0.0.0
-      DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:-secure_password_change_this_in_production}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eagowl_poc_user}:${POSTGRES_PASSWORD:-secure}@postgres:5432/${POSTGRES_DB:-eagowl_poc_db}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-secure_redis_password_change_this_in_production}
-      JWT_SECRET: ${JWT_SECRET:-your_super_secure_jwt_secret_change_this_in_production_minimum_64_characters_required_for_security}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-secure}
+      JWT_SECRET: ${JWT_SECRET:-qweyuiw6686g}
       WS_PORT: 9998
       WS_HOST: 0.0.0.0
       MEDIA_STORAGE_PATH: /app/storage/media
@@ -102,7 +102,7 @@ services:
     container_name: eagowl-poc-coturn
     environment:
       TURN_USERNAME: ${TURN_USERNAME:-eagowl_turn_user}
-      TURN_PASSWORD: ${TURN_PASSWORD:-secure_turn_password_change_this_in_production}
+      TURN_PASSWORD: ${TURN_PASSWORD:-secure}
     volumes:
       - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
       - ./coturn/cert.pem:/etc/ssl/cert.pem
@@ -169,7 +169,7 @@ services:
     container_name: eagowl-poc-grafana
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-secure_grafana_password_change_this_in_production}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-secure}
       GF_USERS_ALLOW_SIGN_UP: false
     volumes:
       - grafana_data:/var/lib/grafana
