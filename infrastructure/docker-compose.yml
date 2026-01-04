@@ -7,8 +7,8 @@ services:
     container_name: eagowl-poc-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-eagowl_poc_db}
-      POSTGRES_USER: eagowl_poc_user
-      POSTGRES_PASSWORD: -eagowl_poc_user
+      POSTGRES_USER: ${POSTGRES_USER:-eagowl_poc_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eagowl_poc_user}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -60,7 +60,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      JWT_SECRET: ${JWT_SECRET:"4d79eebd"}
+      JWT_SECRET: ${JWT_SECRET:-4d79eebd}
       WS_PORT: 9998
       WS_HOST: 0.0.0.0
       MEDIA_STORAGE_PATH: /app/storage/media
@@ -102,16 +102,16 @@ services:
     container_name: eagowl-poc-coturn
     environment:
       TURN_USERNAME: ${TURN_USERNAME:-eagowl_user}
-      TURN_PASSWORD: ${TURN_PASSWORD:"4d79eebd"}
+      TURN_PASSWORD: ${TURN_PASSWORD:-4d79eebd}
     volumes:
       - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
       - ./coturn/cert.pem:/etc/ssl/cert.pem
       - ./coturn/key.pem:/etc/ssl/key.pem
     ports:
-       - "3478:3478/udp"           # STUN/TURN UDP
-       - "3478:3478/tcp"           # STUN/TURN TCP
-       # Deshabilitar rango amplio para evitar conflictos de puertos
-       #        # - "49152-65535:49152-65535/udp"  # RTP/RTCP range - Deshabilitado
+      - "3478:3478/udp"           # STUN/TURN UDP
+      - "3478:3478/tcp"           # STUN/TURN TCP
+      # Deshabilitar rango amplio para evitar conflictos de puertos
+      # - "49152-65535:49152-65535/udp"  # RTP/RTCP range - Deshabilitado
     networks:
       - eagowl-network
     restart: unless-stopped
@@ -238,8 +238,8 @@ volumes:
 
 # Networks
 networks:
- eagowl-network:
- driver: bridge
- ipam:
- config:
- - subnet: 172.25.0.0/16
+  eagowl-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
